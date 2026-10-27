@@ -209,7 +209,8 @@ change to the script compiler.
   Install it there, or pass `--game-root`. The folder must have `levels/`, `audio/` and
   `pictures/`.
 - **"... is not the PC 1.0 build of the game ..."**: the engine reads a few lookup tables
-  from the game's executable at fixed addresses, and this exe is a different build. Please open
-  an issue saying where your copy comes from (disc, Steam, other), and include the exe's size.
+  from the game's executable at fixed addresses, and this exe is a different build. The disc
+  and Steam releases are known to work (Steam's DRM-wrapped exe included: only its data is
+  read). Please open an issue saying where your copy comes from, and include the exe's size.
 - **No sound**: OpenAL is missing (Windows) or no audio server is running (Linux:
   PipeWire/PulseAudio/ALSA are tried in that order by OpenAL Soft).

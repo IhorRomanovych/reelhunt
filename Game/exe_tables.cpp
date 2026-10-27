@@ -84,8 +84,11 @@ constexpr uint32 kDirectorTitles = 0x7c2d64; // { u32 AISPEECH id, char key[8] }
 constexpr uint32 kHunterLines = 0x6af966;
 constexpr int kVoices = 49, kContexts = 59;
 // PlayHunterSpeech's AISPEECH id -> SPECIFIC_SPEECH_n (0x412060): a switch over ids 0..0x75 whose
-// cases return 0x20 + n - 1; anything else has no slot.
+// cases return 0x20 + n - 1; anything else has no slot. Its jump table (0x6704ac, in .rdata) sends
+// each id to one of the eight cases, 8-byte blocks from 0x412070 in slot order.
 constexpr uint32 kSpecificSwitch = 0x412060;
+constexpr uint32 kSpecificTable = 0x6704ac;
+constexpr uint32 kSpecificCases = 0x412070;
 // The ped clips (0x30-byte names, ids 0..0x355) and behaviours (0x18 bytes each, 0..0x3d).
 constexpr uint32 kClipNames = 0x6851c0, kBehaviours = 0x68f210;
 constexpr int kClips = 0x356, kBehaviourCount = 0x3e;
@@ -233,27 +236,35 @@ std::optional<std::string> hunterSpeech(const ExeImage& exe, const std::vector<s
         out += rows;
     }
 
-    // The switch: mov ecx, [esp+4]; cmp ecx, 0x75; ja default; jmp [ecx*4 + table]. Each case is
-    // mov eax, imm32; ret 4.
+    // The slot comes from the jump table alone: the case an id jumps to. Copies whose code is
+    // encrypted on disk (the Steam release's DRM wrapper) keep the table readable. Where the code
+    // can be read, it must be the switch: mov ecx, [esp+4]; cmp ecx, 0x75; ja default;
+    // jmp [ecx*4 + table], each case mov eax, 0x20 + slot; ret 4.
     const uint8* code = exe.at(kSpecificSwitch, 16);
+    const uint8* cases = exe.at(kSpecificCases, 8 * 8);
     static constexpr uint8 kHead[] = {0x8b, 0x4c, 0x24, 0x04, 0x83, 0xf9, 0x75, 0x77};
-    if (!code || std::memcmp(code, kHead, sizeof kHead) != 0 || code[9] != 0xff || code[10] != 0x24 || code[11] != 0x8d)
-        return std::nullopt;
-    uint32 table = 0;
-    std::memcpy(&table, code + 12, 4);
+    if (code && cases && std::memcmp(code, kHead, sizeof kHead) == 0)
+    {
+        uint32 table = 0;
+        std::memcpy(&table, code + 12, 4);
+        if (code[9] != 0xff || code[10] != 0x24 || code[11] != 0x8d || table != kSpecificTable)
+            return std::nullopt;
+        for (uint32 slot = 0; slot < 8; ++slot)
+            if (cases[8 * slot] != 0xb8 || cases[8 * slot + 1] != 0x20 + slot)
+                return std::nullopt;
+    }
     std::vector<std::string> bySlot(8);
     for (uint32 id = 0; id <= 0x75; ++id)
     {
-        const auto target = exe.read<uint32>(table + 4 * id);
-        const uint8* c = target ? exe.at(*target, 5) : nullptr;
-        if (!c)
+        const auto target = exe.read<uint32>(kSpecificTable + 4 * id);
+        if (!target)
             return std::nullopt;
-        if (c[0] != 0xb8) // mov eax, imm32
-            continue;
-        uint32 value = 0;
-        std::memcpy(&value, c + 1, 4);
-        if (value >= 0x20 && value < 0x28)
-            bySlot[value - 0x20] += "specific " + std::to_string(id) + ' ' + std::to_string(value - 0x20) + '\n';
+        if (*target < kSpecificCases || *target >= kSpecificCases + 8 * 8)
+            continue; // the default: no slot
+        if ((*target - kSpecificCases) % 8 != 0)
+            return std::nullopt; // not this build's layout
+        const uint32 slot = (*target - kSpecificCases) / 8;
+        bySlot[slot] += "specific " + std::to_string(id) + ' ' + std::to_string(slot) + '\n';
     }
     for (const std::string& s : bySlot)
         out += s;

@@ -98,6 +98,7 @@ int main(int argc, char** argv)
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Reelhunt", msg.c_str(), nullptr);
             return 1;
         }
+        std::cerr << "main: tables from " << tables->exePath << "\n";
         cfg.directorSpeechPath = dir + "director_speech.txt";
         cfg.hunterSpeechPath = dir + "hunter_speech.txt";
         cfg.pedAnimsPath = dir + "ped_anims.txt";

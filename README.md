@@ -5,8 +5,9 @@ Rockstar North's 2003 stealth-horror game (the 2004 PC release). It reads that g
 models, animations, scripts, audio, Bink video and saves, and aims to play like the original,
 rule for rule, on modern Windows and Linux.
 
-**You need your own PC copy of the original game.** This repository contains no game files,
-and the engine does nothing without them. See [NOTICE.md](NOTICE.md).
+**You need your own PC copy of the original game.** The disc release and the Steam release
+both work (tested). This repository contains no game files, and the engine does nothing
+without them. See [NOTICE.md](NOTICE.md).
 
 ## Status
 
