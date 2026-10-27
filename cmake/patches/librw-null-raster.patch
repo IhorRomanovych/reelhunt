@@ -1,0 +1,19 @@
+diff --git a/src/engine.cpp b/src/engine.cpp
+index 0583cb3..c8e66f1 100644
+--- a/src/engine.cpp
++++ b/src/engine.cpp
+@@ -473,8 +473,13 @@ void im3DRenderIndexedPrimitive(PrimitiveType primType, void *indices, int32 num
+ void im3DEnd(void) { }
+ 
+ Raster*
+-rasterCreate(Raster*)
++rasterCreate(Raster *raster)
+ {
++	// Parse-only NULL platform: never allocate GPU memory. Zero-size / DONTALLOCATE
++	// rasters (e.g. name-only dummy textures created during DFF loads with dummies
++	// enabled) are valid as-is and just carry the texture's name for later matching.
++	if(raster->width == 0 || raster->height == 0 || (raster->flags & Raster::DONTALLOCATE))
++		return raster;
+ 	assert(0 && "rasterCreate not implemented");
+ 	return nil;
+ }

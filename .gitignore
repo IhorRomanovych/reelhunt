@@ -1,0 +1,36 @@
+# Build directories
+_build_*/
+build/
+out/
+
+# Compiled objects and executables
+*.obj
+*.o
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.a
+*.so
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.dir/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS files
+desktop.ini
+
+# Packaged builds
+dist/

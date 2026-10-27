@@ -1,0 +1,76 @@
+# =====================================================================
+# The game PC  -  Cash (player character): keyboard -> animation state
+# =====================================================================
+# This is the REAL key-mapping file the engine reads at startup. Edit it to
+# rebind any key or add new animation actions; no code change needed.
+#
+# Two line kinds ('#' starts a comment, empty lines are ignored):
+#
+#   ACTION <name> <clip> <oneshot:0|1> [baseAfter]
+#     Defines an animation action.
+#       <name>      action name (referenced by KEY lines).
+#       <clip>      the IFP animation clip to play (see allanims.ifp).
+#       <oneshot>   0 = persistent stance (loops while it is the base state)
+#                   1 = one-shot (plays once, then returns to <baseAfter>)
+#       [baseAfter] for one-shots: which action to return to (default = the
+#                   current base stance, e.g. idle / crouch).
+#
+#   KEY <key> <action>
+#     Binds a keyboard key to an action. <key> is an SDL key name:
+#       A-Z, 0-9, F1-F12, SPACE, RETURN, LEFT, RIGHT, UP, DOWN.
+#
+# --- Persistent stances (looping; entering one makes it the base state) ---
+ACTION idle            IdleLoop_Idle          0
+ACTION sneak_stand     Sneak_Stand            0
+ACTION cower           IdleLoop_Cower         0
+ACTION stun_loop       IdleLoop_Melee_Stun    0
+ACTION tired           IdleLoop_Stand_Tired   0
+
+# --- One-shots (play once, then return to the base stance) ---
+ACTION punch_quick1    Fist_Attack_Quick1_T   1
+ACTION punch_quick2    Fist_Attack_Quick2_T   1
+ACTION punch_quick3    Fist_Attack_Quick3_T   1
+ACTION punch_hard1     Fist_Attack_Hard1_T    1
+ACTION punch_hard2     Fist_Attack_Hard2_T    1
+ACTION block           Fist_Block_T           1
+ACTION react_surprise  React_Surprise         1
+ACTION react_noise     React_Noise            1
+ACTION react_visual    React_Visual_T         1
+ACTION peek_l          Peek_L_Stand           1
+ACTION peek_r          Peek_R_Stand           1
+ACTION jump_land       Fall_Land_Fwd          1
+ACTION getup           Getup_Fwd              1
+ACTION knife_swing     Knife_Sneak_Attack2    1
+ACTION throw           Throw_Fire_T           1
+ACTION execute_stand   Melee_Hold_Execute_Sneak_Stand_T  1
+ACTION die             Die_Fwd                1
+
+# --- Key bindings (do not bind ESC / F5 / F9 / V - reserved by the engine) ---
+# stances
+KEY  W   idle
+KEY  S   sneak_stand
+KEY  A   cower
+KEY  D   stun_loop
+KEY  Q   tired
+# fists
+KEY  F   punch_quick1
+KEY  G   punch_quick2
+KEY  H   punch_quick3
+KEY  T   punch_hard1
+KEY  R   punch_hard2
+KEY  B   block
+# reactions
+KEY  1   react_surprise
+KEY  2   react_noise
+KEY  3   react_visual
+KEY  4   peek_l
+KEY  5   peek_r
+# vertical / get up
+KEY  SPACE  jump_land
+KEY  E   getup
+# weapons / melee
+KEY  C   knife_swing
+KEY  N   throw
+# special
+KEY  M   execute_stand
+KEY  X   die
