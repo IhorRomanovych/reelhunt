@@ -531,11 +531,11 @@ private:
         float32 radius = 1.0f;
         bool inside = false, entered = false, left = false;
         // The classes it also notices (TriggerAddEntityClass: a COL_ mask, CTrigger +0x180), and
-        // the entities of them in it: those already inside (+0x150) and those that came in this
-        // frame (+0x14c), each with its entity class (EC_HUNTER 0x1f, EC_COLLECTABLE 0x1001,
-        // EC_WEAPON 0x3001).
+        // the entities of them in it: those already inside (+0x150), those that came in this
+        // frame (+0x14c) and those that left it this frame (+0x154), each with its entity class
+        // (EC_HUNTER 0x1f, EC_COLLECTABLE 0x1001, EC_WEAPON 0x3001).
         uint32 classes = 0;
-        std::vector<std::pair<std::string, int32>> occupants, arrivals;
+        std::vector<std::pair<std::string, int32>> occupants, arrivals, leavers;
         // AttachToEntity(trigger, entity): it rides along, at its offset from the entity.
         uint32 attachedTo = 0;
         Math::Vector3 attachOffset{0.0f, 0.0f, 0.0f};

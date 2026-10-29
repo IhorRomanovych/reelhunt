@@ -1523,12 +1523,24 @@ void LevelRuntime::bindNatives()
             scripts_.setEntityHandle(target, handleOf(target));
         return Value::boolean(ok);
     });
+    // InsideTrigger / EnteredTrigger / LeftTrigger(trigger, entity): whether the entity is among
+    // those already inside the trigger (0x4d29e0: +0x150), came in this frame (0x4d2990: +0x14c)
+    // or left it this frame (0x4d2810: +0x154). The player is always tracked; other entities are
+    // when their class was added (TriggerAddEntityClass), as Jury_Turf's trigger_08 does for the
+    // hunter whose arrival unlocks the gate.
     auto triggerQuery = [this, entityArg](NativeCall& c, int what) {
         const Entity* trig = entity(entityArg(c, 0));
-        if (!trig || trig->trigger < 0 || entityArg(c, 1) != playerHandle_)
+        const uint32 who = entityArg(c, 1);
+        if (!trig || trig->trigger < 0 || who == 0)
             return Value::boolean(false);
         const Trigger& t = triggers_[static_cast<std::size_t>(trig->trigger)];
-        return Value::boolean(what == 0 ? t.inside : (what == 1 ? t.entered : t.left));
+        if (who == playerHandle_)
+            return Value::boolean(what == 0 ? t.inside : (what == 1 ? t.entered : t.left));
+        const Entity* en = entity(who);
+        if (!en)
+            return Value::boolean(false);
+        const auto& list = what == 0 ? t.occupants : (what == 1 ? t.arrivals : t.leavers);
+        return Value::boolean(std::any_of(list.begin(), list.end(), [&](const auto& o) { return o.first == en->name; }));
     };
     e.bind("insidetrigger", [triggerQuery](NativeCall& c) { return triggerQuery(c, 0); });
     // TriggerAddEntityClass(trigger, COL_ mask) (native 0x20d, handler 0x57c0ae: CTrigger +0x180
@@ -3527,6 +3539,19 @@ void LevelRuntime::update(float32 dt, const PlayerSnapshot& player)
     player_.light = effectivePlayerLight(player.light, nearSafeZoneNode(nav_, nodeLight_, player.feet, safe), safe);
     player_.hidden = player_.alive && player_.light < safe;
     player_.justHidden = player_.hidden && !wasHidden;
+    // 0x49a6f0: as his light crosses SAFE_ZONE_% the player's own script hears it, OnEnteredSafeZone
+    // (0x43, posted at 0x49a98a) going in and OnLeftSafeZone (0x44, 0x49a9e7) coming out; nothing
+    // else gates it. (The tutorial's "wait in the shadows" goes on from OnEnteredSafeZone.)
+    if (player_.hidden != wasHidden)
+    {
+        const char* event = player_.hidden ? "OnEnteredSafeZone" : "OnLeftSafeZone";
+        if (scripts_.has("player", event))
+        {
+            if (debugLog_)
+                std::cerr << "[script] player " << event << "\n";
+            scripts_.start("player", event);
+        }
+    }
     if (Entity* p = entity(playerHandle_))
         p->position = player.feet;
     if (!cutscene_)
@@ -4783,10 +4808,13 @@ void LevelRuntime::updateTriggers(const PlayerSnapshot& player)
             before.insert(before.end(), t.arrivals.begin(), t.arrivals.end());
             t.occupants.clear();
             t.arrivals.clear();
+            t.leavers.clear();
             for (const auto& o : now)
                 (std::find(before.begin(), before.end(), o) != before.end() ? t.occupants : t.arrivals).push_back(o);
             for (const auto& o : before)
-                othersLeft = othersLeft || std::find(now.begin(), now.end(), o) == now.end();
+                if (std::find(now.begin(), now.end(), o) == now.end())
+                    t.leavers.push_back(o);
+            othersLeft = !t.leavers.empty();
             othersCame = !t.arrivals.empty();
             if (debugLog_)
                 for (const auto& [name, cls] : t.arrivals)
