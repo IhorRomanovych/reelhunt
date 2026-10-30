@@ -296,12 +296,16 @@ public:
     void playAnim(const std::string& clip, bool looped)
     {
         if (looped)
-            poseClip_ = clip;
+            poseClip_ = scriptPose_ = clip;
         else
             once(clip);
     }
     // AIEntityCancelAnim: its looped clip ends.
-    void cancelAnim() noexcept { poseClip_.clear(); }
+    void cancelAnim() noexcept
+    {
+        poseClip_.clear();
+        scriptPose_.clear();
+    }
     // LockPed(name, on): it stays where it stands, doing nothing (the journalist in her hideout).
     void setLocked(bool on) noexcept { locked_ = on; }
     [[nodiscard]] bool lockonable() const noexcept { return lockonable_; }
@@ -520,6 +524,7 @@ private:
     float32 sawHimAt_ = -1e9f;   // level time it last saw him
     Math::Vector3 sawHimPos_{0.0f, 0.0f, 0.0f}; // where (his feet)
     std::string poseClip_;
+    std::string scriptPose_; // the looped clip the level script asked for (a hostage keeps it)
     int32 kind_ = 0;
     // Leaning out (CPedActPeek): the side (-1 left, +1 right, 0 up over the cover), where its shot
     // leaves, when it started, whether it fired yet, and the level time it may peek again.

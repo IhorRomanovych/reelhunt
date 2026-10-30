@@ -501,7 +501,8 @@ namespace Game
     }
 
     bool Character::attach(const DffLibrary &library, const std::string &clumpName, int16 boneId,
-                           Renderer::Scene &scene, const TextureSet *textures, const Math::Matrix4x4 *offset)
+                           Renderer::Scene &scene, const TextureSet *textures, const Math::Matrix4x4 *offset,
+                           int16 rideBoneId)
     {
         if (!loaded_ || rig_.numBones == 0u)
             return false;
@@ -564,6 +565,15 @@ namespace Game
         }
         if (offset)
             att.local = *offset * att.local; // e.g. HOLSTER_TRANSLATION / _ROTATION on a belt slot
+        // Riding another bone: where it sits on `boneId` in the bind pose, seen from that bone.
+        if (rideBoneId >= 0 && rideBoneId != rig_.boneIds[att.bone])
+            for (uint32 i = 0u; i < rig_.numBones; ++i)
+                if (rig_.boneIds[i] == rideBoneId)
+                {
+                    att.local = rig_.invBindMat[i] * rig_.invBindMat[att.bone].inverse() * att.local;
+                    att.bone = i;
+                    break;
+                }
 
         att.meshes = addClumpMeshes(clump, scene, textures ? *textures : textures_, &meshTextures_);
         meshes_.insert(meshes_.end(), att.meshes.begin(), att.meshes.end());

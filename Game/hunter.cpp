@@ -988,7 +988,11 @@ void Hunter::update(float32 dt, HunterWorld& w)
         sight_ = kNoLevel;
         route_.clear();
         stand(dt);
+        // The looped clip its script plays (Zoo2's hostages: IdleLoop_HandsTied_Stand), else a
+        // tied pose of its animation block (ours).
         poseClip_.clear();
+        if (!scriptPose_.empty() && model_->clipDuration(scriptPose_) > 0.0f)
+            poseClip_ = scriptPose_;
         for (const char* c : {"Idle_Hostage_Slump", "IdleLoop_HandsTied_Stand"})
             if (poseClip_.empty() && model_->clipDuration(c) > 0.0f)
                 poseClip_ = c;

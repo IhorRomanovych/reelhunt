@@ -1,10 +1,11 @@
 // tools/ifp_dump.cpp - list the clips of an .ifp animation file (dev tool).
 //
-//   ifp_dump <file.ifp> [name-filter]
+//   ifp_dump <file.ifp> [name-filter] [-v]
 //
 // One line per clip: block, name, duration, bone-track count and, for every track with positions,
 // the displacement between its first and last key (root motion shows up as the one track that
-// travels).
+// travels). -v adds a line per track: bone id, frame type, key count, first key's rotation and
+// position.
 #include "Assets/ifp/ifp.h"
 
 #include <cmath>
@@ -15,10 +16,11 @@ int main(int argc, char** argv)
 {
     if (argc < 2)
     {
-        std::fprintf(stderr, "usage: ifp_dump <file.ifp> [name-filter]\n");
+        std::fprintf(stderr, "usage: ifp_dump <file.ifp> [name-filter] [-v]\n");
         return 2;
     }
     const std::string filter = argc > 2 ? argv[2] : "";
+    const bool verbose = argc > 3 && std::string(argv[3]) == "-v";
     auto ifp = Assets::loadIfp(argv[1]);
     if (!ifp)
     {
@@ -48,6 +50,18 @@ int main(int argc, char** argv)
                                 a[0], a[1], a[2], dx, dy, dz, t.frames.size(), t.frames.front().time, t.frames.back().time);
             }
             std::printf("\n");
+            if (verbose)
+                for (const Assets::IfpBoneTrack& t : anim.bones)
+                {
+                    if (t.frames.empty())
+                        continue;
+                    const Assets::IfpFrame& f = t.frames.front();
+                    std::printf("    bone %4d type %u keys %3zu  rot (%.3f %.3f %.3f %.3f)", t.boneId, t.frameType, t.frames.size(),
+                                f.quat[0], f.quat[1], f.quat[2], f.quat[3]);
+                    if (f.hasPos)
+                        std::printf("  pos (%.3f %.3f %.3f)", f.pos[0], f.pos[1], f.pos[2]);
+                    std::printf("\n");
+                }
         }
     return 0;
 }

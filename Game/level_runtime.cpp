@@ -39,7 +39,8 @@ namespace {
 using Script::NativeCall;
 using Script::Value;
 
-constexpr int16 kHeadBoneId = 1040;
+constexpr int16 kHeadBoneId = 1040; // the neck: heads are modelled around it
+constexpr int16 kHeadNodBoneId = 1001; // the head: they move with it (its nod is theirs)
 
 std::string lower(std::string s)
 {
@@ -352,7 +353,7 @@ uint32 LevelRuntime::spawnHunter(const Assets::InstPlacement& p)
             if (const std::size_t bod = body.find("Bod"); bod != std::string::npos)
                 head = std::string(body).replace(bod, 3, "Hed");
         if (!head.empty())
-            model->attach(*models, head, kHeadBoneId, *setup_.scene, &setup_.level->textures());
+            model->attach(*models, head, kHeadBoneId, *setup_.scene, &setup_.level->textures(), nullptr, kHeadNodBoneId);
         model->loadAnimations(setup_.animations);
         if (const auto block = animBlocks_.find(lower(p.record)); block != animBlocks_.end())
             model->setAnimationBlock(block->second);
@@ -3755,7 +3756,8 @@ void LevelRuntime::update(float32 dt, const PlayerSnapshot& player)
                       << " alert " << senseLevelName(h->alertLevel()) << " sight " << senseLevelName(h->sight())
                       << " heard " << senseLevelName(h->hearing()) << " hp " << h->health() << " at (" << h->feet().x
                       << ", " << h->feet().z << ") y " << h->feet().y << " yaw " << static_cast<int>(Math::degrees(h->yaw()))
-                      << (g ? " goal " + g->name : std::string(s && !s->idle.empty() ? " idle-actions" : ""));
+                      << (g ? " goal " + g->name : std::string(s && !s->idle.empty() ? " idle-actions" : ""))
+                      << " clip " << h->model().currentClip();
             if (h->routeLeft() > 0)
                 std::cerr << " route " << h->routeLeft() << " -> (" << h->routePoint().x << ", " << h->routePoint().z << ") y "
                           << h->routePoint().y;

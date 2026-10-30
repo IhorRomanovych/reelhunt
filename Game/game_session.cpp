@@ -53,7 +53,8 @@ constexpr float32 kLocomotionXfade = 0.2f;
 
 
 constexpr float32 kDeathRestartSeconds = 4.0f;
-constexpr int16 kHunterHeadBone = 1040; // a hunter's head models ride on it (LevelRuntime)
+constexpr int16 kHunterHeadBone = 1040;    // a hunter's head models are placed on it (LevelRuntime)
+constexpr int16 kHunterHeadNodBone = 1001; // and move with the head bone (its nod)
 // How far in front of him a hunter on the floor can be stomped or struck (ours: its body lies
 // along the floor from its feet).
 constexpr float32 kGroundReach = 2.0f;
@@ -3974,7 +3975,7 @@ void GameSession::explodeHead(Hunter& h, bool scored)
     // The head is gone; how the pieces fly is ours: up and away at 2..4 m/s, spinning, under
     // gravity, and they stay where they land.
     Math::Matrix4x4 bone;
-    if (!h.model().boneTransform(kHunterHeadBone, bone) || !loadGlobalModels())
+    if (!h.model().boneTransform(kHunterHeadNodBone, bone) || !loadGlobalModels())
         return;
     std::string head = runtime_->hunterRecord(h);
     if (const std::size_t bod = head.find("Bod"); bod != std::string::npos)
@@ -4082,7 +4083,8 @@ void GameSession::updateExecution(float32 dt)
                 if (const std::size_t bod = head.find("Bod"); bod != std::string::npos)
                     head.replace(bod, 3, "Hed");
                 if (loadGlobalModels() &&
-                    k.hunter->model().attach(*globalModels_, "Bag_Head", kHunterHeadBone, scene_, &globalTextures_))
+                    k.hunter->model().attach(*globalModels_, "Bag_Head", kHunterHeadBone, scene_, &globalTextures_, nullptr,
+                                             kHunterHeadNodBone))
                 {
                     k.hunter->model().detach(head);
                     if (killModel_)
