@@ -39,7 +39,9 @@ namespace {
 using Script::NativeCall;
 using Script::Value;
 
-constexpr int16 kHeadBoneId = 1040; // the neck: a hunter's head model rides on it
+// A hunter's head model rides the head bone 1001, its origin on the bone (the exe's head frame:
+// 0x4efd40 points an attachment at bone 1001's matrix; 0x4673d0 takes the head to be just above it).
+constexpr int16 kHeadBoneId = 1001;
 
 std::string lower(std::string s)
 {

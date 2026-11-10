@@ -53,8 +53,7 @@ constexpr float32 kLocomotionXfade = 0.2f;
 
 
 constexpr float32 kDeathRestartSeconds = 4.0f;
-constexpr int16 kHunterHeadBone = 1040;    // a hunter's head models ride on it (LevelRuntime)
-constexpr int16 kHunterHeadNodBone = 1001; // the head bone: where the exe takes the head to be
+constexpr int16 kHunterHeadBone = 1001; // a hunter's head models (and the bag) ride on it (LevelRuntime)
 // How far in front of him a hunter on the floor can be stomped or struck (ours: its body lies
 // along the floor from its feet).
 constexpr float32 kGroundReach = 2.0f;
@@ -935,6 +934,27 @@ void GameSession::update(float32 dt)
     {
         camera_->setProjection(static_cast<float32>(cfg_.width) / static_cast<float32>(cfg_.height), fov, 0.1f, 1000.0f);
         camera_->update();
+    }
+    // REELHUNT_FOCUS=<hunter>[:<metres>[:<height>[:<degrees>]]] (testing): the free camera stands
+    // in front of that hunter (2 m, at 1.5 m), turned around it by the angle, and faces it.
+    if (static const char* focus = std::getenv("REELHUNT_FOCUS"); focus && runtime_)
+    {
+        std::string name = focus;
+        float32 dist = 2.0f, height = 1.5f, angle = 0.0f;
+        if (const std::size_t c = name.find(':'); c != std::string::npos)
+        {
+            std::sscanf(name.c_str() + c + 1, "%f:%f:%f", &dist, &height, &angle);
+            name.resize(c);
+        }
+        for (const auto& h : runtime_->hunters())
+            if (h->name() == name && !h->gone())
+            {
+                const float32 yaw = h->yaw() + Math::radians(angle);
+                const Math::Vector3 at = h->feet() + Math::Vector3{-std::sin(yaw), 0.0f, -std::cos(yaw)} * dist;
+                flyCam_.setPose(at + Math::Vector3{0.0f, height, 0.0f}, yaw + Math::pi, 0.0f);
+                useFlyCam_ = true;
+                break;
+            }
     }
     if (useFlyCam_)
         flyCam_.update(dt, camera_);
@@ -3975,7 +3995,7 @@ void GameSession::explodeHead(Hunter& h, bool scored)
     // The head is gone; how the pieces fly is ours: up and away at 2..4 m/s, spinning, under
     // gravity, and they stay where they land.
     Math::Matrix4x4 bone;
-    if (!h.model().boneTransform(kHunterHeadNodBone, bone) || !loadGlobalModels())
+    if (!h.model().boneTransform(kHunterHeadBone, bone) || !loadGlobalModels())
         return;
     std::string head = runtime_->hunterRecord(h);
     if (const std::size_t bod = head.find("Bod"); bod != std::string::npos)
