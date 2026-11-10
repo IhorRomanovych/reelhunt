@@ -39,8 +39,7 @@ namespace {
 using Script::NativeCall;
 using Script::Value;
 
-constexpr int16 kHeadBoneId = 1040; // the neck: heads are modelled around it
-constexpr int16 kHeadNodBoneId = 1001; // the head: they move with it (its nod is theirs)
+constexpr int16 kHeadBoneId = 1040; // the neck: a hunter's head model rides on it
 
 std::string lower(std::string s)
 {
@@ -353,7 +352,7 @@ uint32 LevelRuntime::spawnHunter(const Assets::InstPlacement& p)
             if (const std::size_t bod = body.find("Bod"); bod != std::string::npos)
                 head = std::string(body).replace(bod, 3, "Hed");
         if (!head.empty())
-            model->attach(*models, head, kHeadBoneId, *setup_.scene, &setup_.level->textures(), nullptr, kHeadNodBoneId);
+            model->attach(*models, head, kHeadBoneId, *setup_.scene, &setup_.level->textures());
         model->loadAnimations(setup_.animations);
         if (const auto block = animBlocks_.find(lower(p.record)); block != animBlocks_.end())
             model->setAnimationBlock(block->second);

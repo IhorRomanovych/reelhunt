@@ -85,13 +85,10 @@ namespace Game
 
         // Add the rigid model `clumpName` from `dffPath` as an attachment that follows bone
         // `boneId` (-1 = the highest bone, i.e. the head): hunters' heads, held weapons.
-        // `rideBoneId` (>= 0): the model is placed on `boneId` as in the bind pose but moves with
-        // that bone instead (a hunter's head, authored on the neck 1040, nods with the head 1001).
         bool attach(const std::string &dffPath, const std::string &clumpName, int16 boneId, Renderer::Scene &scene,
                     const TextureSet *textures = nullptr);
         bool attach(const DffLibrary &library, const std::string &clumpName, int16 boneId, Renderer::Scene &scene,
-                    const TextureSet *textures = nullptr, const Math::Matrix4x4 *offset = nullptr,
-                    int16 rideBoneId = -1);
+                    const TextureSet *textures = nullptr, const Math::Matrix4x4 *offset = nullptr);
         // Takes the attachment `clumpName` (on bone `boneId`, -1 = any) off again (its meshes are
         // hidden); false if there is none.
         bool detach(const std::string &clumpName, int16 boneId = -1);
